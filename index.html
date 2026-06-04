@@ -287,10 +287,6 @@
       line-height: 1.45;
     }
 
-    .file-note {
-      font-size: 13px;
-      color: var(--muted);
-    }
 
     @media (max-width: 700px) {
       .page {
@@ -371,9 +367,6 @@
         font-size: 13px;
       }
 
-      .file-note {
-        font-size: 12px;
-      }
 
       .table-wrap {
         overflow-x: visible;
@@ -479,7 +472,7 @@
     <header>
       <h1>NBA Ranking Game</h1>
       <p>
-        Sorteie um jogador e tente adivinhar a posição dele em cada ranking histórico.
+        Sorteie um jogador e tente adivinhar a posição dele nos rankings históricos, que vão de #1 a #250.
         A primeira rodada dá pistas; a segunda revela os rankings reais e calcula a pontuação.
       </p>
     </header>
@@ -514,10 +507,6 @@
             <div id="scoreRound2Details" class="score-details">Aparece após validar a segunda rodada.</div>
           </div>
         </div>
-
-        <p class="file-note">
-          Os rankings são lidos da pasta dados/. O arquivo sorteio.csv define quais jogadores podem ser sorteados.
-        </p>
       </aside>
 
       <section class="card">
@@ -860,14 +849,23 @@
 
     function intensidadeErro(delta) {
       if (delta <= ERRO_PEQUENO_MAX) {
-        return "Um pouco ";
+        return "Um pouco";
       }
 
       if (delta <= ERRO_MEDIO_MAX) {
         return "";
       }
 
-      return "Muito ";
+      return "Muito";
+    }
+
+    function textoFeedback(delta, direcao) {
+      const intensidade = intensidadeErro(delta);
+      const base = direcao === "acima" ? "acima no ranking" : "abaixo no ranking";
+      const seta = direcao === "acima" ? "↑" : "↓";
+      const texto = intensidade ? `${intensidade} ${base}` : base;
+
+      return `${seta} ${texto.charAt(0).toUpperCase()}${texto.slice(1)}`;
     }
 
     function formatarPercentual(valor) {
@@ -1104,10 +1102,10 @@
           feedbackCell.textContent = "Acertou!";
           feedbackCell.className = "feedback-text equal";
         } else if (palpite > real) {
-          feedbackCell.textContent = `↑ ${intensidadeErro(delta)}acima no ranking`;
+          feedbackCell.textContent = textoFeedback(delta, "acima");
           feedbackCell.className = `feedback-text ${classeErro(delta)}`;
         } else {
-          feedbackCell.textContent = `↓ ${intensidadeErro(delta)}abaixo no ranking`;
+          feedbackCell.textContent = textoFeedback(delta, "abaixo");
           feedbackCell.className = `feedback-text ${classeErro(delta)}`;
         }
       }
@@ -1121,8 +1119,7 @@
       el.scoreBox.style.display = "block";
       el.scoreRound1Main.textContent = formatarPercentual(score.percentual);
       el.scoreRound1Details.textContent =
-        `Soma das margens de erro: ${score.somaDeltas}. Stats aplicáveis: ${score.totalAplicaveis}/${CATEGORIAS.length}. ` +
-        `Fórmula: 1 - (${score.somaDeltas} / ${score.maxDeltaAplicavel}).`;
+        `Soma das margens de erro: ${score.somaDeltas}. Stats aplicáveis: ${score.totalAplicaveis}/${CATEGORIAS.length}.`;
     }
 
     function ativarRodada2() {
@@ -1171,8 +1168,7 @@
       el.scoreBox.style.display = "block";
       el.scoreRound2Main.textContent = formatarPercentual(score.percentual);
       el.scoreRound2Details.textContent =
-        `Soma das margens de erro: ${score.somaDeltas}. Stats aplicáveis: ${score.totalAplicaveis}/${CATEGORIAS.length}. ` +
-        `Fórmula: 1 - (${score.somaDeltas} / ${score.maxDeltaAplicavel}).`;
+        `Soma das margens de erro: ${score.somaDeltas}. Stats aplicáveis: ${score.totalAplicaveis}/${CATEGORIAS.length}.`;
 
       state.validatedRound2 = true;
       el.status.textContent = "Jogo encerrado. As posições reais foram reveladas.";
