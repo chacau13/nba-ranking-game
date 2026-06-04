@@ -13,8 +13,9 @@
       --text: #e5e7eb;
       --muted: #9ca3af;
       --border: #374151;
-      --accent: #facc15;
       --green: #22c55e;
+      --yellow: #facc15;
+      --red: #ef4444;
       --button: #2563eb;
       --button-hover: #1d4ed8;
       --warning-border: #92400e;
@@ -22,9 +23,7 @@
       --warning-text: #fde68a;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -35,14 +34,12 @@
     }
 
     .page {
-      width: min(1100px, calc(100% - 32px));
+      width: min(1220px, calc(100% - 32px));
       margin: 0 auto;
       padding: 32px 0 48px;
     }
 
-    header {
-      margin-bottom: 24px;
-    }
+    header { margin-bottom: 24px; }
 
     h1 {
       margin: 0 0 8px;
@@ -63,10 +60,8 @@
       align-items: start;
     }
 
-    @media (max-width: 900px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
     }
 
     .card {
@@ -151,12 +146,12 @@
       transform: none;
     }
 
-    button.secondary {
-      background: #374151;
-    }
+    button.secondary { background: #374151; }
+    button.secondary:hover { background: #4b5563; }
 
-    button.secondary:hover {
-      background: #4b5563;
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
     }
 
     table {
@@ -164,6 +159,7 @@
       border-collapse: collapse;
       overflow: hidden;
       border-radius: 14px;
+      min-width: 820px;
     }
 
     thead th {
@@ -174,6 +170,7 @@
       background: #0b1220;
       padding: 12px;
       border-bottom: 1px solid var(--border);
+      white-space: nowrap;
     }
 
     tbody td {
@@ -182,17 +179,18 @@
       vertical-align: middle;
     }
 
-    tbody tr:last-child td {
-      border-bottom: 0;
-    }
+    tbody tr:last-child td { border-bottom: 0; }
 
     .stat-name {
       font-weight: 700;
+      white-space: nowrap;
     }
+
+    .inactive-row { opacity: 0.62; }
 
     input[type="number"] {
       width: 100%;
-      max-width: 110px;
+      max-width: 96px;
       padding: 10px;
       border-radius: 10px;
       border: 1px solid var(--border);
@@ -201,30 +199,34 @@
       font-size: 16px;
     }
 
+    input[type="number"]:disabled {
+      color: var(--muted);
+      background: #111827;
+    }
+
     .feedback {
-      min-width: 90px;
+      min-width: 80px;
       font-size: 24px;
       font-weight: 900;
       text-align: center;
+      white-space: nowrap;
     }
 
-    .up,
-    .down {
-      color: var(--accent);
-    }
-
-    .equal {
-      color: var(--green);
-    }
+    .small-error { color: var(--green); }
+    .medium-error { color: var(--yellow); }
+    .large-error { color: var(--red); }
+    .equal { color: var(--green); }
 
     .truth {
       color: var(--text);
       font-weight: 800;
+      white-space: nowrap;
     }
 
     .hidden {
       color: var(--muted);
       font-weight: 500;
+      white-space: nowrap;
     }
 
     .score-box {
@@ -255,9 +257,7 @@
       font-size: 14px;
     }
 
-    .warning strong {
-      color: #fff7ed;
-    }
+    .warning strong { color: #fff7ed; }
 
     .file-note {
       font-size: 13px;
@@ -283,9 +283,7 @@
 
         <div id="roundPill" class="round-pill">Rodada 1 de 2</div>
 
-        <p id="status" class="status">
-          Carregando arquivos CSV.
-        </p>
+        <p id="status" class="status">Carregando arquivos CSV.</p>
 
         <div class="actions">
           <button id="spinBtn" disabled>Sortear jogador</button>
@@ -294,13 +292,13 @@
           <button id="resetBtn" class="secondary" disabled>Novo jogo</button>
         </div>
 
-        <div id="warning" class="warning"></div>
-
         <div id="scoreBox" class="score-box">
           <div class="label">Pontuação final</div>
-          <div id="scoreMain" class="score-main">0,000</div>
+          <div id="scoreMain" class="score-main">0,00%</div>
           <p id="scoreDetails"></p>
         </div>
+
+        <div id="warning" class="warning"></div>
 
         <p class="file-note">
           Os rankings são lidos da pasta dados/. O arquivo sorteio.csv define quais jogadores podem ser sorteados.
@@ -308,61 +306,31 @@
       </aside>
 
       <section class="card">
-        <table>
-          <thead>
-            <tr>
-              <th>Lista</th>
-              <th>Seu palpite</th>
-              <th>Feedback</th>
-              <th>Ranking real</th>
-            </tr>
-          </thead>
-          <tbody id="guessTable"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Lista</th>
+                <th>Rodada 1</th>
+                <th>Feedback R1</th>
+                <th>Rodada 2</th>
+                <th>Delta R2</th>
+                <th>Ranking real</th>
+              </tr>
+            </thead>
+            <tbody id="guessTable"></tbody>
+          </table>
+        </div>
       </section>
     </section>
   </main>
 
   <script>
-    /*
-      ESTRUTURA DO PROJETO
-
-      index.html
-      dados/
-        jogos.csv
-        pontos.csv
-        fg3.csv
-        assistencias.csv
-        fta.csv
-        rebotes_ofensivos.csv
-        rebotes_defensivos.csv
-        steals.csv
-        blocks.csv
-        turnovers.csv
-        sorteio.csv
-
-      FORMATO ESPERADO DOS CSVs DE RANKING
-
-      Rk,Player
-      1,LeBron James
-      2,Kareem Abdul-Jabbar
-      3,Karl Malone
-      ...
-
-      O código lê explicitamente a coluna Rk ou Rank.
-      Se não houver coluna Rk/Rank, ele usa a ordem das linhas.
-
-      FORMATO ESPERADO DO sorteio.csv
-
-      Player
-      LeBron James
-      Kareem Abdul-Jabbar
-      ...
-
-      Use no sorteio.csv apenas jogadores que estejam nas 10 listas.
-    */
-
     const RANK_MAX = 250;
+
+    // Ajuste estes limites se quiser calibrar as cores das setas e dos deltas.
+    const ERRO_PEQUENO_MAX = 20;
+    const ERRO_MEDIO_MAX = 75;
 
     const CATEGORIAS = [
       { key: "jogos", label: "Jogos" },
@@ -391,9 +359,6 @@
     };
 
     const ARQUIVO_SORTEIO = "dados/sorteio.csv";
-
-    const TOTAL_CATEGORIAS = CATEGORIAS.length;
-    const MAX_DELTA = TOTAL_CATEGORIAS * (RANK_MAX - 1);
 
     let LISTAS_RANKINGS = {};
     let JOGADORES_SORTEIO = [];
@@ -451,13 +416,9 @@
       return String(nome || "")
         .replace(/\*/g, "")
         .replace(/\s+/g, " ")
+        .replace(/\u00a0/g, " ")
+        .replace(/\ufeff/g, "")
         .trim();
-    }
-
-    function extrairNumeroInteiro(valor) {
-      const texto = String(valor || "").trim();
-      const match = texto.match(/\d+/);
-      return match ? Number(match[0]) : null;
     }
 
     function encontrarIndiceColuna(cabecalho, nomesPossiveis) {
@@ -478,6 +439,16 @@
       return response.text();
     }
 
+    function linhaPareceCabecalho(colunas) {
+      const normalizadas = colunas.map(coluna =>
+        String(coluna).trim().toLowerCase().replace(/\ufeff/g, "")
+      );
+
+      return normalizadas.includes("player")
+        || normalizadas.includes("jogador")
+        || normalizadas.includes("nome");
+    }
+
     async function csvParaRanking(url) {
       const text = (await lerArquivoTexto(url)).replace(/^\uFEFF/, "");
       const linhas = text
@@ -485,50 +456,40 @@
         .map(linha => linha.trim())
         .filter(Boolean);
 
-      if (linhas.length < 2) {
-        throw new Error(`O arquivo ${url} está vazio ou sem linhas de dados.`);
+      if (linhas.length === 0) {
+        throw new Error(`O arquivo ${url} está vazio.`);
       }
 
-      const cabecalho = parseCSVLine(linhas[0]).map(coluna => coluna.trim());
+      const primeiraLinha = parseCSVLine(linhas[0]).map(coluna => coluna.trim());
+      const temCabecalho = linhaPareceCabecalho(primeiraLinha);
 
-      const indiceJogador = encontrarIndiceColuna(cabecalho, ["Player", "Jogador", "Nome"]);
-      const indiceRank = encontrarIndiceColuna(cabecalho, ["Rk", "Rank", "Ranking", "Pos"]);
+      let indiceJogador = 1;
+      let inicio = 0;
 
-      if (indiceJogador === -1) {
-        throw new Error(`Coluna Player/Jogador/Nome não encontrada em ${url}.`);
+      if (temCabecalho) {
+        const indiceEncontrado = encontrarIndiceColuna(primeiraLinha, ["Player", "Jogador", "Nome"]);
+        indiceJogador = indiceEncontrado === -1 ? 1 : indiceEncontrado;
+        inicio = 1;
       }
 
       const ranking = [];
 
-      for (let i = 1; i < linhas.length; i++) {
+      for (let i = inicio; i < linhas.length; i++) {
         const colunas = parseCSVLine(linhas[i]);
         const nome = limparNomeJogador(colunas[indiceJogador]);
 
-        if (!nome || nome.toLowerCase() === "player") {
-          continue;
-        }
-
-        let rank;
-
-        if (indiceRank !== -1) {
-          rank = extrairNumeroInteiro(colunas[indiceRank]);
-        } else {
-          rank = ranking.length + 1;
-        }
-
-        if (!Number.isInteger(rank)) {
-          continue;
-        }
+        if (!nome) continue;
+        if (["player", "jogador", "nome"].includes(nome.toLowerCase())) continue;
 
         ranking.push({
-          rank,
+          rank: ranking.length + 1,
           jogador: nome
         });
+
+        if (ranking.length >= RANK_MAX) break;
       }
 
-      ranking.sort((a, b) => a.rank - b.rank);
-
-      return ranking.slice(0, RANK_MAX);
+      return ranking;
     }
 
     async function csvParaListaDeJogadores(url) {
@@ -543,21 +504,22 @@
       }
 
       const primeiraLinha = parseCSVLine(linhas[0]).map(coluna => coluna.trim());
-      const indiceJogador = encontrarIndiceColuna(primeiraLinha, ["Player", "Jogador", "Nome"]);
+      const temCabecalho = linhaPareceCabecalho(primeiraLinha);
 
       let inicio = 0;
       let colunaJogador = 0;
 
-      if (indiceJogador !== -1) {
+      if (temCabecalho) {
+        const indiceEncontrado = encontrarIndiceColuna(primeiraLinha, ["Player", "Jogador", "Nome"]);
         inicio = 1;
-        colunaJogador = indiceJogador;
+        colunaJogador = indiceEncontrado === -1 ? 0 : indiceEncontrado;
       }
 
       return linhas
         .slice(inicio)
         .map(linha => limparNomeJogador(parseCSVLine(linha)[colunaJogador]))
         .filter(Boolean)
-        .filter(nome => nome.toLowerCase() !== "player");
+        .filter(nome => !["player", "jogador", "nome"].includes(nome.toLowerCase()));
     }
 
     async function carregarDados() {
@@ -578,10 +540,7 @@
         const lista = LISTAS_RANKINGS[categoria.key] || [];
 
         for (const item of lista) {
-          if (!map[item.jogador]) {
-            map[item.jogador] = {};
-          }
-
+          if (!map[item.jogador]) map[item.jogador] = {};
           map[item.jogador][categoria.key] = item.rank;
         }
       }
@@ -603,13 +562,7 @@
         const jogadoresDuplicados = jogadores.filter((nome, index) => jogadores.indexOf(nome) !== index);
 
         if (jogadoresDuplicados.length > 0) {
-          avisos.push(`${categoria.label}: há nomes de jogadores duplicados.`);
-        }
-
-        const foraDoIntervalo = lista.filter(item => item.rank < 1 || item.rank > RANK_MAX);
-
-        if (foraDoIntervalo.length > 0) {
-          avisos.push(`${categoria.label}: há rankings fora do intervalo 1-${RANK_MAX}.`);
+          avisos.push(`${categoria.label}: há nomes duplicados.`);
         }
       }
 
@@ -617,29 +570,9 @@
         avisos.push("sorteio.csv não tem jogadores disponíveis.");
       }
 
-      const ausentes = [];
-
-      for (const jogador of JOGADORES_SORTEIO) {
-        for (const categoria of CATEGORIAS) {
-          const rank = state.rankingsPorJogador[jogador]?.[categoria.key];
-
-          if (!rank) {
-            ausentes.push(`${jogador} não aparece em ${categoria.label}.`);
-          }
-        }
-      }
-
-      if (ausentes.length > 0) {
-        avisos.push(...ausentes.slice(0, 12));
-
-        if (ausentes.length > 12) {
-          avisos.push(`Mais ${ausentes.length - 12} ausência(s) não exibida(s).`);
-        }
-      }
-
       if (avisos.length > 0) {
         el.warning.style.display = "block";
-        el.warning.innerHTML = `<strong>Aviso sobre os dados:</strong><br>${avisos.join("<br>")}`;
+        el.warning.innerHTML = `<strong>Avisos sobre os dados:</strong><br>${avisos.join("<br>")}`;
       } else {
         el.warning.style.display = "none";
         el.warning.textContent = "";
@@ -651,21 +584,18 @@
 
       for (const categoria of CATEGORIAS) {
         const tr = document.createElement("tr");
+        tr.id = `row-${categoria.key}`;
 
         tr.innerHTML = `
           <td class="stat-name">${categoria.label}</td>
           <td>
-            <input
-              type="number"
-              min="1"
-              max="${RANK_MAX}"
-              step="1"
-              id="guess-${categoria.key}"
-              aria-label="Palpite para ${categoria.label}"
-              disabled
-            />
+            <input type="number" min="1" max="${RANK_MAX}" step="1" id="guess1-${categoria.key}" aria-label="Palpite da rodada 1 para ${categoria.label}" disabled />
           </td>
-          <td id="feedback-${categoria.key}" class="feedback">—</td>
+          <td id="feedback1-${categoria.key}" class="feedback">—</td>
+          <td>
+            <input type="number" min="1" max="${RANK_MAX}" step="1" id="guess2-${categoria.key}" aria-label="Palpite da rodada 2 para ${categoria.label}" disabled />
+          </td>
+          <td id="feedback2-${categoria.key}" class="feedback">—</td>
           <td id="truth-${categoria.key}" class="hidden">Oculto</td>
         `;
 
@@ -673,28 +603,115 @@
       }
     }
 
-    function setInputsEnabled(enabled) {
+    function getRankReal(categoriaKey) {
+      return state.rankingsPorJogador[state.player]?.[categoriaKey] ?? null;
+    }
+
+    function categoriaAplicavel(categoria) {
+      return Boolean(getRankReal(categoria.key));
+    }
+
+    function getCategoriasAplicaveis() {
+      return CATEGORIAS.filter(categoria => categoriaAplicavel(categoria));
+    }
+
+    function classeErro(delta) {
+      if (delta <= ERRO_PEQUENO_MAX) return "small-error";
+      if (delta <= ERRO_MEDIO_MAX) return "medium-error";
+      return "large-error";
+    }
+
+    function formatarPercentual(valor) {
+      return valor.toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }) + "%";
+    }
+
+    function setInputsEnabled() {
       for (const categoria of CATEGORIAS) {
-        document.getElementById(`guess-${categoria.key}`).disabled = !enabled;
+        const aplicavel = state.player && categoriaAplicavel(categoria);
+        const input1 = document.getElementById(`guess1-${categoria.key}`);
+        const input2 = document.getElementById(`guess2-${categoria.key}`);
+
+        input1.disabled = !(aplicavel && state.round === 1 && !state.validatedRound1);
+        input2.disabled = !(aplicavel && state.round === 2 && !state.validatedRound2);
       }
+    }
+
+    function prepararLinhasParaJogador() {
+      for (const categoria of CATEGORIAS) {
+        const row = document.getElementById(`row-${categoria.key}`);
+        const input1 = document.getElementById(`guess1-${categoria.key}`);
+        const input2 = document.getElementById(`guess2-${categoria.key}`);
+        const feedback1 = document.getElementById(`feedback1-${categoria.key}`);
+        const feedback2 = document.getElementById(`feedback2-${categoria.key}`);
+        const truth = document.getElementById(`truth-${categoria.key}`);
+
+        input1.value = "";
+        input2.value = "";
+        input1.placeholder = "";
+        input2.placeholder = "";
+
+        feedback1.textContent = "—";
+        feedback1.className = "feedback";
+        feedback2.textContent = "—";
+        feedback2.className = "feedback";
+        truth.textContent = "Oculto";
+        truth.className = "hidden";
+        row.classList.remove("inactive-row");
+
+        if (state.player && !categoriaAplicavel(categoria)) {
+          input1.placeholder = "N/A";
+          input2.placeholder = "N/A";
+          feedback1.textContent = "N/A";
+          feedback1.className = "feedback hidden";
+          feedback2.textContent = "N/A";
+          feedback2.className = "feedback hidden";
+          truth.textContent = "Fora do ranking";
+          truth.className = "hidden";
+          row.classList.add("inactive-row");
+        }
+      }
+
+      setInputsEnabled();
     }
 
     function clearInputsAndFeedback() {
       for (const categoria of CATEGORIAS) {
-        document.getElementById(`guess-${categoria.key}`).value = "";
-        document.getElementById(`feedback-${categoria.key}`).textContent = "—";
-        document.getElementById(`feedback-${categoria.key}`).className = "feedback";
-        document.getElementById(`truth-${categoria.key}`).textContent = "Oculto";
-        document.getElementById(`truth-${categoria.key}`).className = "hidden";
+        const row = document.getElementById(`row-${categoria.key}`);
+        const input1 = document.getElementById(`guess1-${categoria.key}`);
+        const input2 = document.getElementById(`guess2-${categoria.key}`);
+        const feedback1 = document.getElementById(`feedback1-${categoria.key}`);
+        const feedback2 = document.getElementById(`feedback2-${categoria.key}`);
+        const truth = document.getElementById(`truth-${categoria.key}`);
+
+        input1.value = "";
+        input2.value = "";
+        input1.placeholder = "";
+        input2.placeholder = "";
+        input1.disabled = true;
+        input2.disabled = true;
+
+        feedback1.textContent = "—";
+        feedback1.className = "feedback";
+        feedback2.textContent = "—";
+        feedback2.className = "feedback";
+        truth.textContent = "Oculto";
+        truth.className = "hidden";
+        row.classList.remove("inactive-row");
       }
     }
 
-    function getGuesses() {
+    function getGuesses(rodada) {
       const guesses = {};
       const erros = [];
+      const prefixo = rodada === 1 ? "guess1" : "guess2";
 
       for (const categoria of CATEGORIAS) {
-        const input = document.getElementById(`guess-${categoria.key}`);
+        if (!categoriaAplicavel(categoria)) continue;
+
+        const input = document.getElementById(`${prefixo}-${categoria.key}`);
         const valor = Number(input.value);
 
         if (!Number.isInteger(valor) || valor < 1 || valor > RANK_MAX) {
@@ -705,10 +722,6 @@
       }
 
       return { guesses, erros };
-    }
-
-    function getRankReal(categoriaKey) {
-      return state.rankingsPorJogador[state.player]?.[categoriaKey] ?? null;
     }
 
     function sortearJogador() {
@@ -725,7 +738,7 @@
       el.spinBtn.disabled = true;
       el.validateBtn.disabled = true;
       el.nextBtn.disabled = true;
-      setInputsEnabled(false);
+      setInputsEnabled();
       el.status.textContent = "Sorteando...";
 
       const intervalId = setInterval(() => {
@@ -738,12 +751,25 @@
 
           state.player = JOGADORES_SORTEIO[Math.floor(Math.random() * JOGADORES_SORTEIO.length)];
           el.playerDisplay.textContent = state.player;
-          el.status.textContent = "Rodada 1: digite seus palpites e valide.";
+
+          prepararLinhasParaJogador();
+
+          const aplicaveis = getCategoriasAplicaveis().length;
+
+          if (aplicaveis === 0) {
+            el.status.textContent = "Este jogador não aparece em nenhum ranking carregado.";
+            el.spinBtn.disabled = false;
+            el.validateBtn.disabled = true;
+            el.resetBtn.disabled = false;
+            return;
+          }
+
+          el.status.textContent = `Rodada 1: digite seus palpites e valide. Stats aplicáveis: ${aplicaveis}/${CATEGORIAS.length}.`;
 
           el.spinBtn.disabled = false;
           el.validateBtn.disabled = false;
           el.resetBtn.disabled = false;
-          setInputsEnabled(true);
+          setInputsEnabled();
         }
       }, 70);
     }
@@ -754,43 +780,47 @@
         return;
       }
 
-      const { guesses, erros } = getGuesses();
+      const aplicaveis = getCategoriasAplicaveis().length;
 
-      if (erros.length > 0) {
-        el.status.textContent = `Preencha todos os palpites com números de 1 a ${RANK_MAX}. Pendentes: ${erros.join(", ")}.`;
+      if (aplicaveis === 0) {
+        el.status.textContent = "Este jogador não tem stats aplicáveis nos rankings carregados.";
         return;
       }
 
-      if (state.round === 1) {
-        validarRodada1(guesses);
-      } else {
-        validarRodada2(guesses);
+      const { guesses, erros } = getGuesses(state.round);
+
+      if (erros.length > 0) {
+        el.status.textContent = `Preencha os palpites aplicáveis com números de 1 a ${RANK_MAX}. Pendentes: ${erros.join(", ")}.`;
+        return;
       }
+
+      if (state.round === 1) validarRodada1(guesses);
+      else validarRodada2(guesses);
     }
 
     function validarRodada1(guesses) {
       for (const categoria of CATEGORIAS) {
-        const palpite = guesses[categoria.key];
         const real = getRankReal(categoria.key);
-        const feedbackCell = document.getElementById(`feedback-${categoria.key}`);
+        const feedbackCell = document.getElementById(`feedback1-${categoria.key}`);
 
         if (!real) {
-          feedbackCell.textContent = "?";
-          feedbackCell.className = "feedback";
+          feedbackCell.textContent = "N/A";
+          feedbackCell.className = "feedback hidden";
           continue;
         }
+
+        const palpite = guesses[categoria.key];
+        const delta = Math.abs(palpite - real);
 
         if (palpite === real) {
           feedbackCell.textContent = "=";
           feedbackCell.className = "feedback equal";
         } else if (palpite > real) {
-          // Exemplo: palpite #80, real #20. O jogador está mais alto no ranking.
           feedbackCell.textContent = "↑";
-          feedbackCell.className = "feedback up";
+          feedbackCell.className = `feedback ${classeErro(delta)}`;
         } else {
-          // Exemplo: palpite #20, real #80. O jogador está mais baixo no ranking.
           feedbackCell.textContent = "↓";
-          feedbackCell.className = "feedback down";
+          feedbackCell.className = `feedback ${classeErro(delta)}`;
         }
       }
 
@@ -798,71 +828,80 @@
       el.status.textContent = "Pistas dadas. Avance para a rodada 2 e faça os palpites finais.";
       el.validateBtn.disabled = true;
       el.nextBtn.disabled = false;
-      setInputsEnabled(false);
+      setInputsEnabled();
     }
 
     function irParaRodada2() {
-      if (!state.validatedRound1) {
-        return;
-      }
+      if (!state.validatedRound1) return;
 
       state.round = 2;
       state.validatedRound2 = false;
 
       el.roundPill.textContent = "Rodada 2 de 2";
-      el.status.textContent = "Rodada 2: digite seus palpites finais.";
+      el.status.textContent = "Rodada 2: digite seus palpites finais. A rodada 1 permanece visível.";
       el.validateBtn.disabled = false;
       el.nextBtn.disabled = true;
 
-      setInputsEnabled(true);
-
       for (const categoria of CATEGORIAS) {
-        document.getElementById(`guess-${categoria.key}`).value = "";
-        document.getElementById(`feedback-${categoria.key}`).textContent = "—";
-        document.getElementById(`feedback-${categoria.key}`).className = "feedback";
+        const feedback2 = document.getElementById(`feedback2-${categoria.key}`);
+
+        if (categoriaAplicavel(categoria)) {
+          document.getElementById(`guess2-${categoria.key}`).value = "";
+          feedback2.textContent = "—";
+          feedback2.className = "feedback";
+        } else {
+          feedback2.textContent = "N/A";
+          feedback2.className = "feedback hidden";
+        }
       }
+
+      setInputsEnabled();
     }
 
     function validarRodada2(guesses) {
       let somaDeltas = 0;
+      const categoriasAplicaveis = getCategoriasAplicaveis();
+      const totalAplicaveis = categoriasAplicaveis.length;
+      const maxDeltaAplicavel = totalAplicaveis * (RANK_MAX - 1);
 
       for (const categoria of CATEGORIAS) {
-        const palpite = guesses[categoria.key];
         const real = getRankReal(categoria.key);
-        const feedbackCell = document.getElementById(`feedback-${categoria.key}`);
+        const feedbackCell = document.getElementById(`feedback2-${categoria.key}`);
         const truthCell = document.getElementById(`truth-${categoria.key}`);
 
         if (!real) {
-          feedbackCell.textContent = "?";
-          feedbackCell.className = "feedback";
-          truthCell.textContent = "Fora da base";
-          truthCell.className = "truth";
+          feedbackCell.textContent = "N/A";
+          feedbackCell.className = "feedback hidden";
+          truthCell.textContent = "N/A";
+          truthCell.className = "hidden";
           continue;
         }
 
+        const palpite = guesses[categoria.key];
         const delta = Math.abs(palpite - real);
         somaDeltas += delta;
 
         feedbackCell.textContent = `Δ ${delta}`;
-        feedbackCell.className = "feedback";
+        feedbackCell.className = `feedback ${classeErro(delta)}`;
         truthCell.textContent = `#${real}`;
         truthCell.className = "truth";
       }
 
-      const pontuacao = 1 - (somaDeltas / MAX_DELTA);
+      const pontuacao = 1 - (somaDeltas / maxDeltaAplicavel);
       const pontuacaoLimitada = Math.max(0, Math.min(1, pontuacao));
+      const percentual = pontuacaoLimitada * 100;
 
       el.scoreBox.style.display = "block";
-      el.scoreMain.textContent = pontuacaoLimitada.toFixed(3).replace(".", ",");
+      el.scoreMain.textContent = formatarPercentual(percentual);
       el.scoreDetails.textContent =
-        `Soma dos deltas: ${somaDeltas}. Fórmula: 1 - (${somaDeltas} / ${MAX_DELTA}). ` +
-        `Equivalente a ${(pontuacaoLimitada * 100).toFixed(1).replace(".", ",")}% de precisão.`;
+        `Soma dos deltas: ${somaDeltas}. Stats aplicáveis: ${totalAplicaveis}/${CATEGORIAS.length}. ` +
+        `Fórmula: 1 - (${somaDeltas} / ${maxDeltaAplicavel}).`;
 
       state.validatedRound2 = true;
       el.status.textContent = "Jogo encerrado. As posições reais foram reveladas.";
       el.validateBtn.disabled = true;
       el.nextBtn.disabled = true;
-      setInputsEnabled(false);
+      setInputsEnabled();
     }
 
     function resetarEstadoVisual({ manterJogador }) {
@@ -870,9 +909,7 @@
       state.validatedRound1 = false;
       state.validatedRound2 = false;
 
-      if (!manterJogador) {
-        state.player = null;
-      }
+      if (!manterJogador) state.player = null;
 
       el.roundPill.textContent = "Rodada 1 de 2";
       el.status.textContent = manterJogador && state.player
@@ -884,11 +921,9 @@
       el.scoreBox.style.display = "none";
 
       clearInputsAndFeedback();
-      setInputsEnabled(Boolean(state.player));
 
-      if (!manterJogador) {
-        el.playerDisplay.textContent = "Clique em sortear";
-      }
+      if (state.player) prepararLinhasParaJogador();
+      if (!manterJogador) el.playerDisplay.textContent = "Clique em sortear";
     }
 
     function novoJogo() {
@@ -910,7 +945,6 @@
 
       try {
         await carregarDados();
-
         state.rankingsPorJogador = buildRankingMap();
 
         validarBaseDeDados();
