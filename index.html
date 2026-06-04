@@ -291,6 +291,186 @@
       font-size: 13px;
       color: var(--muted);
     }
+
+    @media (max-width: 700px) {
+      .page {
+        width: min(100% - 20px, 1220px);
+        padding: 18px 0 32px;
+      }
+
+      header {
+        margin-bottom: 14px;
+      }
+
+      h1 {
+        font-size: 28px;
+        line-height: 1.05;
+      }
+
+      header p {
+        font-size: 14px;
+      }
+
+      .grid {
+        gap: 12px;
+      }
+
+      .card {
+        padding: 14px;
+        border-radius: 16px;
+      }
+
+      .spin-box {
+        gap: 12px;
+      }
+
+      .player-display {
+        min-height: 86px;
+        font-size: 25px;
+        padding: 12px;
+      }
+
+      .round-pill {
+        font-size: 13px;
+        padding: 6px 10px;
+      }
+
+      .status {
+        font-size: 14px;
+        min-height: unset;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      button {
+        width: 100%;
+        min-height: 46px;
+        font-size: 15px;
+      }
+
+      .score-box {
+        padding: 14px;
+        margin-top: 8px;
+      }
+
+      .score-row {
+        gap: 3px;
+        padding-bottom: 12px;
+        margin-bottom: 12px;
+      }
+
+      .score-main {
+        font-size: 31px;
+      }
+
+      .score-details {
+        font-size: 13px;
+      }
+
+      .file-note {
+        font-size: 12px;
+      }
+
+      .table-wrap {
+        overflow-x: visible;
+      }
+
+      table {
+        min-width: 0;
+        border-collapse: separate;
+        border-spacing: 0 12px;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tbody tr {
+        display: block;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: #0b1220;
+        padding: 12px;
+      }
+
+      tbody tr.inactive-row {
+        opacity: 0.55;
+      }
+
+      tbody td {
+        display: grid;
+        grid-template-columns: 118px minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+        border-bottom: 1px solid var(--border);
+        padding: 10px 0;
+      }
+
+      tbody td:last-child {
+        border-bottom: 0;
+      }
+
+      tbody td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      td.stat-name {
+        display: block;
+        font-size: 18px;
+        padding-top: 0;
+        color: var(--text);
+      }
+
+      td.stat-name::before {
+        content: "";
+        display: none;
+      }
+
+      input[type="number"] {
+        max-width: none;
+        width: 100%;
+        min-height: 44px;
+        font-size: 18px;
+      }
+
+      .feedback-text {
+        min-width: 0;
+        white-space: normal;
+        font-size: 14px;
+        line-height: 1.25;
+      }
+
+      .result-value {
+        min-width: 0;
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      tbody td {
+        grid-template-columns: 104px minmax(0, 1fr);
+        gap: 8px;
+      }
+
+      tbody td::before {
+        font-size: 12px;
+      }
+
+      .feedback-text {
+        font-size: 13px;
+      }
+
+      .player-display {
+        font-size: 23px;
+      }
+    }
   </style>
 </head>
 
@@ -622,8 +802,8 @@
         tr.id = `row-${categoria.key}`;
 
         tr.innerHTML = `
-          <td class="stat-name">${categoria.label}</td>
-          <td>
+          <td class="stat-name" data-label="Lista">${categoria.label}</td>
+          <td data-label="Rodada 1">
             <input
               type="number"
               min="1"
@@ -634,8 +814,8 @@
               disabled
             />
           </td>
-          <td id="feedback1-${categoria.key}" class="feedback-text">—</td>
-          <td>
+          <td id="feedback1-${categoria.key}" class="feedback-text" data-label="Feedback R1">—</td>
+          <td data-label="Rodada 2">
             <input
               type="number"
               min="1"
@@ -646,8 +826,8 @@
               disabled
             />
           </td>
-          <td id="truth-${categoria.key}" class="result-value hidden">Oculto</td>
-          <td id="margin-${categoria.key}" class="result-value">—</td>
+          <td id="truth-${categoria.key}" class="result-value hidden" data-label="Ranking real">Oculto</td>
+          <td id="margin-${categoria.key}" class="result-value" data-label="Margem de erro">—</td>
         `;
 
         el.guessTable.appendChild(tr);
