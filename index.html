@@ -23,7 +23,9 @@
       --warning-text: #fde68a;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -39,7 +41,9 @@
       padding: 32px 0 48px;
     }
 
-    header { margin-bottom: 24px; }
+    header {
+      margin-bottom: 24px;
+    }
 
     h1 {
       margin: 0 0 8px;
@@ -61,7 +65,9 @@
     }
 
     @media (max-width: 980px) {
-      .grid { grid-template-columns: 1fr; }
+      .grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .card {
@@ -146,8 +152,13 @@
       transform: none;
     }
 
-    button.secondary { background: #374151; }
-    button.secondary:hover { background: #4b5563; }
+    button.secondary {
+      background: #374151;
+    }
+
+    button.secondary:hover {
+      background: #4b5563;
+    }
 
     .table-wrap {
       width: 100%;
@@ -159,7 +170,7 @@
       border-collapse: collapse;
       overflow: hidden;
       border-radius: 14px;
-      min-width: 820px;
+      min-width: 900px;
     }
 
     thead th {
@@ -179,14 +190,18 @@
       vertical-align: middle;
     }
 
-    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
 
     .stat-name {
       font-weight: 700;
       white-space: nowrap;
     }
 
-    .inactive-row { opacity: 0.62; }
+    .inactive-row {
+      opacity: 0.62;
+    }
 
     input[type="number"] {
       width: 100%;
@@ -204,23 +219,34 @@
       background: #111827;
     }
 
-    .feedback {
-      min-width: 80px;
-      font-size: 24px;
-      font-weight: 900;
-      text-align: center;
+    .feedback-text {
+      min-width: 130px;
+      font-size: 14px;
+      font-weight: 800;
       white-space: nowrap;
     }
 
-    .small-error { color: var(--green); }
-    .medium-error { color: var(--yellow); }
-    .large-error { color: var(--red); }
-    .equal { color: var(--green); }
-
-    .truth {
-      color: var(--text);
+    .result-value {
+      min-width: 80px;
+      font-size: 18px;
       font-weight: 800;
       white-space: nowrap;
+    }
+
+    .small-error {
+      color: var(--green);
+    }
+
+    .medium-error {
+      color: var(--yellow);
+    }
+
+    .large-error {
+      color: var(--red);
+    }
+
+    .equal {
+      color: var(--green);
     }
 
     .hidden {
@@ -257,7 +283,9 @@
       font-size: 14px;
     }
 
-    .warning strong { color: #fff7ed; }
+    .warning strong {
+      color: #fff7ed;
+    }
 
     .file-note {
       font-size: 13px;
@@ -283,12 +311,13 @@
 
         <div id="roundPill" class="round-pill">Rodada 1 de 2</div>
 
-        <p id="status" class="status">Carregando arquivos CSV.</p>
+        <p id="status" class="status">
+          Carregando arquivos CSV.
+        </p>
 
         <div class="actions">
           <button id="spinBtn" disabled>Sortear jogador</button>
           <button id="validateBtn" disabled>Validar rodada</button>
-          <button id="nextBtn" class="secondary" disabled>Ir para rodada 2</button>
           <button id="resetBtn" class="secondary" disabled>Novo jogo</button>
         </div>
 
@@ -314,8 +343,8 @@
                 <th>Rodada 1</th>
                 <th>Feedback R1</th>
                 <th>Rodada 2</th>
-                <th>Delta R2</th>
                 <th>Ranking real</th>
+                <th>Margem de erro</th>
               </tr>
             </thead>
             <tbody id="guessTable"></tbody>
@@ -326,9 +355,38 @@
   </main>
 
   <script>
+    /*
+      ESTRUTURA ESPERADA
+
+      index.html
+      dados/
+        jogos.csv
+        pontos.csv
+        fg3.csv
+        assistencias.csv
+        fta.csv
+        rebotes_ofensivos.csv
+        rebotes_defensivos.csv
+        steals.csv
+        blocks.csv
+        turnovers.csv
+        sorteio.csv
+
+      O ranking real é calculado pela ordem das linhas válidas do CSV,
+      não pelo número da coluna Rk.
+
+      Exemplo:
+      Rk,Player,G
+      1.,LeBron James,1622
+      2.,Kareem Abdul-Jabbar,1560
+      ,Patty Mills,921
+
+      Se Patty Mills for a 250ª linha válida, ele será tratado como #250.
+    */
+
     const RANK_MAX = 250;
 
-    // Ajuste estes limites se quiser calibrar as cores das setas e dos deltas.
+    // Ajuste estes limites para calibrar as cores.
     const ERRO_PEQUENO_MAX = 20;
     const ERRO_MEDIO_MAX = 75;
 
@@ -378,7 +436,6 @@
       guessTable: document.getElementById("guessTable"),
       spinBtn: document.getElementById("spinBtn"),
       validateBtn: document.getElementById("validateBtn"),
-      nextBtn: document.getElementById("nextBtn"),
       resetBtn: document.getElementById("resetBtn"),
       scoreBox: document.getElementById("scoreBox"),
       scoreMain: document.getElementById("scoreMain"),
@@ -478,15 +535,22 @@
         const colunas = parseCSVLine(linhas[i]);
         const nome = limparNomeJogador(colunas[indiceJogador]);
 
-        if (!nome) continue;
-        if (["player", "jogador", "nome"].includes(nome.toLowerCase())) continue;
+        if (!nome) {
+          continue;
+        }
+
+        if (["player", "jogador", "nome"].includes(nome.toLowerCase())) {
+          continue;
+        }
 
         ranking.push({
           rank: ranking.length + 1,
           jogador: nome
         });
 
-        if (ranking.length >= RANK_MAX) break;
+        if (ranking.length >= RANK_MAX) {
+          break;
+        }
       }
 
       return ranking;
@@ -540,7 +604,10 @@
         const lista = LISTAS_RANKINGS[categoria.key] || [];
 
         for (const item of lista) {
-          if (!map[item.jogador]) map[item.jogador] = {};
+          if (!map[item.jogador]) {
+            map[item.jogador] = {};
+          }
+
           map[item.jogador][categoria.key] = item.rank;
         }
       }
@@ -589,14 +656,30 @@
         tr.innerHTML = `
           <td class="stat-name">${categoria.label}</td>
           <td>
-            <input type="number" min="1" max="${RANK_MAX}" step="1" id="guess1-${categoria.key}" aria-label="Palpite da rodada 1 para ${categoria.label}" disabled />
+            <input
+              type="number"
+              min="1"
+              max="${RANK_MAX}"
+              step="1"
+              id="guess1-${categoria.key}"
+              aria-label="Palpite da rodada 1 para ${categoria.label}"
+              disabled
+            />
           </td>
-          <td id="feedback1-${categoria.key}" class="feedback">—</td>
+          <td id="feedback1-${categoria.key}" class="feedback-text">—</td>
           <td>
-            <input type="number" min="1" max="${RANK_MAX}" step="1" id="guess2-${categoria.key}" aria-label="Palpite da rodada 2 para ${categoria.label}" disabled />
+            <input
+              type="number"
+              min="1"
+              max="${RANK_MAX}"
+              step="1"
+              id="guess2-${categoria.key}"
+              aria-label="Palpite da rodada 2 para ${categoria.label}"
+              disabled
+            />
           </td>
-          <td id="feedback2-${categoria.key}" class="feedback">—</td>
-          <td id="truth-${categoria.key}" class="hidden">Oculto</td>
+          <td id="truth-${categoria.key}" class="result-value hidden">Oculto</td>
+          <td id="margin-${categoria.key}" class="result-value">—</td>
         `;
 
         el.guessTable.appendChild(tr);
@@ -616,8 +699,14 @@
     }
 
     function classeErro(delta) {
-      if (delta <= ERRO_PEQUENO_MAX) return "small-error";
-      if (delta <= ERRO_MEDIO_MAX) return "medium-error";
+      if (delta <= ERRO_PEQUENO_MAX) {
+        return "small-error";
+      }
+
+      if (delta <= ERRO_MEDIO_MAX) {
+        return "medium-error";
+      }
+
       return "large-error";
     }
 
@@ -645,8 +734,8 @@
         const input1 = document.getElementById(`guess1-${categoria.key}`);
         const input2 = document.getElementById(`guess2-${categoria.key}`);
         const feedback1 = document.getElementById(`feedback1-${categoria.key}`);
-        const feedback2 = document.getElementById(`feedback2-${categoria.key}`);
         const truth = document.getElementById(`truth-${categoria.key}`);
+        const margin = document.getElementById(`margin-${categoria.key}`);
 
         input1.value = "";
         input2.value = "";
@@ -654,22 +743,22 @@
         input2.placeholder = "";
 
         feedback1.textContent = "—";
-        feedback1.className = "feedback";
-        feedback2.textContent = "—";
-        feedback2.className = "feedback";
+        feedback1.className = "feedback-text";
         truth.textContent = "Oculto";
-        truth.className = "hidden";
+        truth.className = "result-value hidden";
+        margin.textContent = "—";
+        margin.className = "result-value";
         row.classList.remove("inactive-row");
 
         if (state.player && !categoriaAplicavel(categoria)) {
           input1.placeholder = "N/A";
           input2.placeholder = "N/A";
           feedback1.textContent = "N/A";
-          feedback1.className = "feedback hidden";
-          feedback2.textContent = "N/A";
-          feedback2.className = "feedback hidden";
-          truth.textContent = "Fora do ranking";
-          truth.className = "hidden";
+          feedback1.className = "feedback-text hidden";
+          truth.textContent = "N/A";
+          truth.className = "result-value hidden";
+          margin.textContent = "N/A";
+          margin.className = "result-value hidden";
           row.classList.add("inactive-row");
         }
       }
@@ -683,8 +772,8 @@
         const input1 = document.getElementById(`guess1-${categoria.key}`);
         const input2 = document.getElementById(`guess2-${categoria.key}`);
         const feedback1 = document.getElementById(`feedback1-${categoria.key}`);
-        const feedback2 = document.getElementById(`feedback2-${categoria.key}`);
         const truth = document.getElementById(`truth-${categoria.key}`);
+        const margin = document.getElementById(`margin-${categoria.key}`);
 
         input1.value = "";
         input2.value = "";
@@ -694,11 +783,11 @@
         input2.disabled = true;
 
         feedback1.textContent = "—";
-        feedback1.className = "feedback";
-        feedback2.textContent = "—";
-        feedback2.className = "feedback";
+        feedback1.className = "feedback-text";
         truth.textContent = "Oculto";
-        truth.className = "hidden";
+        truth.className = "result-value hidden";
+        margin.textContent = "—";
+        margin.className = "result-value";
         row.classList.remove("inactive-row");
       }
     }
@@ -709,7 +798,9 @@
       const prefixo = rodada === 1 ? "guess1" : "guess2";
 
       for (const categoria of CATEGORIAS) {
-        if (!categoriaAplicavel(categoria)) continue;
+        if (!categoriaAplicavel(categoria)) {
+          continue;
+        }
 
         const input = document.getElementById(`${prefixo}-${categoria.key}`);
         const valor = Number(input.value);
@@ -737,7 +828,6 @@
 
       el.spinBtn.disabled = true;
       el.validateBtn.disabled = true;
-      el.nextBtn.disabled = true;
       setInputsEnabled();
       el.status.textContent = "Sorteando...";
 
@@ -768,6 +858,7 @@
 
           el.spinBtn.disabled = false;
           el.validateBtn.disabled = false;
+          el.validateBtn.textContent = "Validar rodada";
           el.resetBtn.disabled = false;
           setInputsEnabled();
         }
@@ -794,8 +885,12 @@
         return;
       }
 
-      if (state.round === 1) validarRodada1(guesses);
-      else validarRodada2(guesses);
+      if (state.round === 1) {
+        validarRodada1(guesses);
+        ativarRodada2();
+      } else {
+        validarRodada2(guesses);
+      }
     }
 
     function validarRodada1(guesses) {
@@ -805,7 +900,7 @@
 
         if (!real) {
           feedbackCell.textContent = "N/A";
-          feedbackCell.className = "feedback hidden";
+          feedbackCell.className = "feedback-text hidden";
           continue;
         }
 
@@ -813,45 +908,32 @@
         const delta = Math.abs(palpite - real);
 
         if (palpite === real) {
-          feedbackCell.textContent = "=";
-          feedbackCell.className = "feedback equal";
+          feedbackCell.textContent = "Acertou!";
+          feedbackCell.className = "feedback-text equal";
         } else if (palpite > real) {
-          feedbackCell.textContent = "↑";
-          feedbackCell.className = `feedback ${classeErro(delta)}`;
+          feedbackCell.textContent = "Acima no ranking";
+          feedbackCell.className = `feedback-text ${classeErro(delta)}`;
         } else {
-          feedbackCell.textContent = "↓";
-          feedbackCell.className = `feedback ${classeErro(delta)}`;
+          feedbackCell.textContent = "Abaixo no ranking";
+          feedbackCell.className = `feedback-text ${classeErro(delta)}`;
         }
       }
 
       state.validatedRound1 = true;
-      el.status.textContent = "Pistas dadas. Avance para a rodada 2 e faça os palpites finais.";
-      el.validateBtn.disabled = true;
-      el.nextBtn.disabled = false;
-      setInputsEnabled();
     }
 
-    function irParaRodada2() {
-      if (!state.validatedRound1) return;
-
+    function ativarRodada2() {
       state.round = 2;
       state.validatedRound2 = false;
 
       el.roundPill.textContent = "Rodada 2 de 2";
       el.status.textContent = "Rodada 2: digite seus palpites finais. A rodada 1 permanece visível.";
       el.validateBtn.disabled = false;
-      el.nextBtn.disabled = true;
+      el.validateBtn.textContent = "Validar rodada 2";
 
       for (const categoria of CATEGORIAS) {
-        const feedback2 = document.getElementById(`feedback2-${categoria.key}`);
-
         if (categoriaAplicavel(categoria)) {
           document.getElementById(`guess2-${categoria.key}`).value = "";
-          feedback2.textContent = "—";
-          feedback2.className = "feedback";
-        } else {
-          feedback2.textContent = "N/A";
-          feedback2.className = "feedback hidden";
         }
       }
 
@@ -866,14 +948,14 @@
 
       for (const categoria of CATEGORIAS) {
         const real = getRankReal(categoria.key);
-        const feedbackCell = document.getElementById(`feedback2-${categoria.key}`);
         const truthCell = document.getElementById(`truth-${categoria.key}`);
+        const marginCell = document.getElementById(`margin-${categoria.key}`);
 
         if (!real) {
-          feedbackCell.textContent = "N/A";
-          feedbackCell.className = "feedback hidden";
           truthCell.textContent = "N/A";
-          truthCell.className = "hidden";
+          truthCell.className = "result-value hidden";
+          marginCell.textContent = "N/A";
+          marginCell.className = "result-value hidden";
           continue;
         }
 
@@ -881,10 +963,10 @@
         const delta = Math.abs(palpite - real);
         somaDeltas += delta;
 
-        feedbackCell.textContent = `Δ ${delta}`;
-        feedbackCell.className = `feedback ${classeErro(delta)}`;
         truthCell.textContent = `#${real}`;
-        truthCell.className = "truth";
+        truthCell.className = "result-value";
+        marginCell.textContent = String(delta);
+        marginCell.className = `result-value ${classeErro(delta)}`;
       }
 
       const pontuacao = 1 - (somaDeltas / maxDeltaAplicavel);
@@ -894,13 +976,13 @@
       el.scoreBox.style.display = "block";
       el.scoreMain.textContent = formatarPercentual(percentual);
       el.scoreDetails.textContent =
-        `Soma dos deltas: ${somaDeltas}. Stats aplicáveis: ${totalAplicaveis}/${CATEGORIAS.length}. ` +
+        `Soma das margens de erro: ${somaDeltas}. Stats aplicáveis: ${totalAplicaveis}/${CATEGORIAS.length}. ` +
         `Fórmula: 1 - (${somaDeltas} / ${maxDeltaAplicavel}).`;
 
       state.validatedRound2 = true;
       el.status.textContent = "Jogo encerrado. As posições reais foram reveladas.";
       el.validateBtn.disabled = true;
-      el.nextBtn.disabled = true;
+      el.validateBtn.textContent = "Validar rodada";
       setInputsEnabled();
     }
 
@@ -909,7 +991,9 @@
       state.validatedRound1 = false;
       state.validatedRound2 = false;
 
-      if (!manterJogador) state.player = null;
+      if (!manterJogador) {
+        state.player = null;
+      }
 
       el.roundPill.textContent = "Rodada 1 de 2";
       el.status.textContent = manterJogador && state.player
@@ -917,13 +1001,18 @@
         : "Sorteie um jogador para começar.";
 
       el.validateBtn.disabled = !state.player;
-      el.nextBtn.disabled = true;
+      el.validateBtn.textContent = "Validar rodada";
       el.scoreBox.style.display = "none";
 
       clearInputsAndFeedback();
 
-      if (state.player) prepararLinhasParaJogador();
-      if (!manterJogador) el.playerDisplay.textContent = "Clique em sortear";
+      if (state.player) {
+        prepararLinhasParaJogador();
+      }
+
+      if (!manterJogador) {
+        el.playerDisplay.textContent = "Clique em sortear";
+      }
     }
 
     function novoJogo() {
@@ -945,6 +1034,7 @@
 
       try {
         await carregarDados();
+
         state.rankingsPorJogador = buildRankingMap();
 
         validarBaseDeDados();
@@ -955,7 +1045,6 @@
 
         el.spinBtn.addEventListener("click", sortearJogador);
         el.validateBtn.addEventListener("click", validarRodada);
-        el.nextBtn.addEventListener("click", irParaRodada2);
         el.resetBtn.addEventListener("click", novoJogo);
       } catch (error) {
         mostrarErroDeCarregamento(error);
