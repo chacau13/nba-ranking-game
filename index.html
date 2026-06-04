@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NBA Ranking Game</title>
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --card-2: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #374151;
+      --accent: #facc15;
+      --green: #22c55e;
+      --button: #2563eb;
+      --button-hover: #1d4ed8;
+      --warning-border: #92400e;
+      --warning-bg: rgba(146, 64, 14, 0.16);
+      --warning-text: #fde68a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0%, var(--bg) 55%);
+      color: var(--text);
+    }
+
+    .page {
+      width: min(1100px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 48px;
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 4vw, 44px);
+      letter-spacing: -0.04em;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: rgba(17, 24, 39, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
+    }
+
+    .spin-box {
+      display: grid;
+      gap: 14px;
+    }
+
+    .label {
+      font-size: 13px;
+      text-transform: uppercase;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+    }
+
+    .player-display {
+      min-height: 120px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      background: linear-gradient(135deg, #020617, #111827);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .status {
+      min-height: 24px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .round-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-2);
+      border-radius: 999px;
+      padding: 7px 11px;
+      color: var(--text);
+      font-size: 14px;
+      width: fit-content;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      background: var(--button);
+      color: white;
+      font-weight: 700;
+      padding: 11px 14px;
+      cursor: pointer;
+      transition: 0.16s ease;
+    }
+
+    button:hover {
+      background: var(--button-hover);
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      background: #4b5563;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    button.secondary {
+      background: #374151;
+    }
+
+    button.secondary:hover {
+      background: #4b5563;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 14px;
+    }
+
+    thead th {
+      text-align: left;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+      background: #0b1220;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .stat-name {
+      font-weight: 700;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      max-width: 110px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    .feedback {
+      min-width: 90px;
+      font-size: 24px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .up,
+    .down {
+      color: var(--accent);
+    }
+
+    .equal {
+      color: var(--green);
+    }
+
+    .truth {
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    .hidden {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .score-box {
+      display: none;
+      margin-top: 16px;
+      background: #020617;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .score-main {
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin-bottom: 8px;
+    }
+
+    .warning {
+      display: none;
+      margin-top: 12px;
+      border: 1px solid var(--warning-border);
+      background: var(--warning-bg);
+      color: var(--warning-text);
+      border-radius: 14px;
+      padding: 12px;
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .warning strong {
+      color: #fff7ed;
+    }
+
+    .file-note {
+      font-size: 13px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <header>
+      <h1>NBA Ranking Game</h1>
+      <p>
+        Sorteie um jogador e tente adivinhar a posição dele em cada ranking histórico.
+        A primeira rodada dá pistas; a segunda revela os rankings reais e calcula a pontuação.
+      </p>
+    </header>
+
+    <section class="grid">
+      <aside class="card spin-box">
+        <div class="label">Jogador sorteado</div>
+        <div id="playerDisplay" class="player-display">Carregando dados...</div>
+
+        <div id="roundPill" class="round-pill">Rodada 1 de 2</div>
+
+        <p id="status" class="status">
+          Carregando arquivos CSV.
+        </p>
+
+        <div class="actions">
+          <button id="spinBtn" disabled>Sortear jogador</button>
+          <button id="validateBtn" disabled>Validar rodada</button>
+          <button id="nextBtn" class="secondary" disabled>Ir para rodada 2</button>
+          <button id="resetBtn" class="secondary" disabled>Novo jogo</button>
+        </div>
+
+        <div id="warning" class="warning"></div>
+
+        <div id="scoreBox" class="score-box">
+          <div class="label">Pontuação final</div>
+          <div id="scoreMain" class="score-main">0,000</div>
+          <p id="scoreDetails"></p>
+        </div>
+
+        <p class="file-note">
+          Os rankings são lidos da pasta dados/. O arquivo sorteio.csv define quais jogadores podem ser sorteados.
+        </p>
+      </aside>
+
+      <section class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Lista</th>
+              <th>Seu palpite</th>
+              <th>Feedback</th>
+              <th>Ranking real</th>
+            </tr>
+          </thead>
+          <tbody id="guessTable"></tbody>
+        </table>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    /*
+      ESTRUTURA DO PROJETO
+
+      index.html
+      dados/
+        jogos.csv
+        pontos.csv
+        fg3.csv
+        assistencias.csv
+        fta.csv
+        rebotes_ofensivos.csv
+        rebotes_defensivos.csv
+        steals.csv
+        blocks.csv
+        turnovers.csv
+        sorteio.csv
+
+      FORMATO ESPERADO DOS CSVs DE RANKING
+
+      Rk,Player
+      1,LeBron James
+      2,Kareem Abdul-Jabbar
+      3,Karl Malone
+      ...
+
+      O código lê explicitamente a coluna Rk ou Rank.
+      Se não houver coluna Rk/Rank, ele usa a ordem das linhas.
+
+      FORMATO ESPERADO DO sorteio.csv
+
+      Player
+      LeBron James
+      Kareem Abdul-Jabbar
+      ...
+
+      Use no sorteio.csv apenas jogadores que estejam nas 10 listas.
+    */
+
+    const RANK_MAX = 250;
+
+    const CATEGORIAS = [
+      { key: "jogos", label: "Jogos" },
+      { key: "pontos", label: "Pontos" },
+      { key: "fg3", label: "3PT FGs" },
+      { key: "assistencias", label: "Assistências" },
+      { key: "fta", label: "FTA" },
+      { key: "rebotesOfensivos", label: "Rebotes ofensivos" },
+      { key: "rebotesDefensivos", label: "Rebotes defensivos" },
+      { key: "steals", label: "Steals" },
+      { key: "blocks", label: "Blocks" },
+      { key: "turnovers", label: "Turnovers" }
+    ];
+
+    const ARQUIVOS_CSV = {
+      jogos: "dados/jogos.csv",
+      pontos: "dados/pontos.csv",
+      fg3: "dados/fg3.csv",
+      assistencias: "dados/assistencias.csv",
+      fta: "dados/fta.csv",
+      rebotesOfensivos: "dados/rebotes_ofensivos.csv",
+      rebotesDefensivos: "dados/rebotes_defensivos.csv",
+      steals: "dados/steals.csv",
+      blocks: "dados/blocks.csv",
+      turnovers: "dados/turnovers.csv"
+    };
+
+    const ARQUIVO_SORTEIO = "dados/sorteio.csv";
+
+    const TOTAL_CATEGORIAS = CATEGORIAS.length;
+    const MAX_DELTA = TOTAL_CATEGORIAS * (RANK_MAX - 1);
+
+    let LISTAS_RANKINGS = {};
+    let JOGADORES_SORTEIO = [];
+
+    const state = {
+      player: null,
+      round: 1,
+      validatedRound1: false,
+      validatedRound2: false,
+      rankingsPorJogador: {}
+    };
+
+    const el = {
+      playerDisplay: document.getElementById("playerDisplay"),
+      roundPill: document.getElementById("roundPill"),
+      status: document.getElementById("status"),
+      guessTable: document.getElementById("guessTable"),
+      spinBtn: document.getElementById("spinBtn"),
+      validateBtn: document.getElementById("validateBtn"),
+      nextBtn: document.getElementById("nextBtn"),
+      resetBtn: document.getElementById("resetBtn"),
+      scoreBox: document.getElementById("scoreBox"),
+      scoreMain: document.getElementById("scoreMain"),
+      scoreDetails: document.getElementById("scoreDetails"),
+      warning: document.getElementById("warning")
+    };
+
+    function parseCSVLine(line) {
+      const result = [];
+      let current = "";
+      let insideQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+
+        if (char === '"' && insideQuotes && nextChar === '"') {
+          current += '"';
+          i++;
+        } else if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (char === "," && !insideQuotes) {
+          result.push(current);
+          current = "";
+        } else {
+          current += char;
+        }
+      }
+
+      result.push(current);
+      return result;
+    }
+
+    function limparNomeJogador(nome) {
+      return String(nome || "")
+        .replace(/\*/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function extrairNumeroInteiro(valor) {
+      const texto = String(valor || "").trim();
+      const match = texto.match(/\d+/);
+      return match ? Number(match[0]) : null;
+    }
+
+    function encontrarIndiceColuna(cabecalho, nomesPossiveis) {
+      const normalizados = nomesPossiveis.map(nome => nome.toLowerCase());
+
+      return cabecalho.findIndex(coluna =>
+        normalizados.includes(String(coluna).trim().toLowerCase())
+      );
+    }
+
+    async function lerArquivoTexto(url) {
+      const response = await fetch(url, { cache: "no-store" });
+
+      if (!response.ok) {
+        throw new Error(`Não foi possível carregar o arquivo ${url}.`);
+      }
+
+      return response.text();
+    }
+
+    async function csvParaRanking(url) {
+      const text = (await lerArquivoTexto(url)).replace(/^\uFEFF/, "");
+      const linhas = text
+        .split(/\r?\n/)
+        .map(linha => linha.trim())
+        .filter(Boolean);
+
+      if (linhas.length < 2) {
+        throw new Error(`O arquivo ${url} está vazio ou sem linhas de dados.`);
+      }
+
+      const cabecalho = parseCSVLine(linhas[0]).map(coluna => coluna.trim());
+
+      const indiceJogador = encontrarIndiceColuna(cabecalho, ["Player", "Jogador", "Nome"]);
+      const indiceRank = encontrarIndiceColuna(cabecalho, ["Rk", "Rank", "Ranking", "Pos"]);
+
+      if (indiceJogador === -1) {
+        throw new Error(`Coluna Player/Jogador/Nome não encontrada em ${url}.`);
+      }
+
+      const ranking = [];
+
+      for (let i = 1; i < linhas.length; i++) {
+        const colunas = parseCSVLine(linhas[i]);
+        const nome = limparNomeJogador(colunas[indiceJogador]);
+
+        if (!nome || nome.toLowerCase() === "player") {
+          continue;
+        }
+
+        let rank;
+
+        if (indiceRank !== -1) {
+          rank = extrairNumeroInteiro(colunas[indiceRank]);
+        } else {
+          rank = ranking.length + 1;
+        }
+
+        if (!Number.isInteger(rank)) {
+          continue;
+        }
+
+        ranking.push({
+          rank,
+          jogador: nome
+        });
+      }
+
+      ranking.sort((a, b) => a.rank - b.rank);
+
+      return ranking.slice(0, RANK_MAX);
+    }
+
+    async function csvParaListaDeJogadores(url) {
+      const text = (await lerArquivoTexto(url)).replace(/^\uFEFF/, "");
+      const linhas = text
+        .split(/\r?\n/)
+        .map(linha => linha.trim())
+        .filter(Boolean);
+
+      if (linhas.length === 0) {
+        throw new Error(`O arquivo ${url} está vazio.`);
+      }
+
+      const primeiraLinha = parseCSVLine(linhas[0]).map(coluna => coluna.trim());
+      const indiceJogador = encontrarIndiceColuna(primeiraLinha, ["Player", "Jogador", "Nome"]);
+
+      let inicio = 0;
+      let colunaJogador = 0;
+
+      if (indiceJogador !== -1) {
+        inicio = 1;
+        colunaJogador = indiceJogador;
+      }
+
+      return linhas
+        .slice(inicio)
+        .map(linha => limparNomeJogador(parseCSVLine(linha)[colunaJogador]))
+        .filter(Boolean)
+        .filter(nome => nome.toLowerCase() !== "player");
+    }
+
+    async function carregarDados() {
+      const rankings = {};
+
+      for (const categoria of CATEGORIAS) {
+        rankings[categoria.key] = await csvParaRanking(ARQUIVOS_CSV[categoria.key]);
+      }
+
+      LISTAS_RANKINGS = rankings;
+      JOGADORES_SORTEIO = await csvParaListaDeJogadores(ARQUIVO_SORTEIO);
+    }
+
+    function buildRankingMap() {
+      const map = {};
+
+      for (const categoria of CATEGORIAS) {
+        const lista = LISTAS_RANKINGS[categoria.key] || [];
+
+        for (const item of lista) {
+          if (!map[item.jogador]) {
+            map[item.jogador] = {};
+          }
+
+          map[item.jogador][categoria.key] = item.rank;
+        }
+      }
+
+      return map;
+    }
+
+    function validarBaseDeDados() {
+      const avisos = [];
+
+      for (const categoria of CATEGORIAS) {
+        const lista = LISTAS_RANKINGS[categoria.key] || [];
+        const jogadores = lista.map(item => item.jogador);
+
+        if (lista.length !== RANK_MAX) {
+          avisos.push(`${categoria.label}: há ${lista.length} jogadores, não ${RANK_MAX}.`);
+        }
+
+        const jogadoresDuplicados = jogadores.filter((nome, index) => jogadores.indexOf(nome) !== index);
+
+        if (jogadoresDuplicados.length > 0) {
+          avisos.push(`${categoria.label}: há nomes de jogadores duplicados.`);
+        }
+
+        const foraDoIntervalo = lista.filter(item => item.rank < 1 || item.rank > RANK_MAX);
+
+        if (foraDoIntervalo.length > 0) {
+          avisos.push(`${categoria.label}: há rankings fora do intervalo 1-${RANK_MAX}.`);
+        }
+      }
+
+      if (JOGADORES_SORTEIO.length === 0) {
+        avisos.push("sorteio.csv não tem jogadores disponíveis.");
+      }
+
+      const ausentes = [];
+
+      for (const jogador of JOGADORES_SORTEIO) {
+        for (const categoria of CATEGORIAS) {
+          const rank = state.rankingsPorJogador[jogador]?.[categoria.key];
+
+          if (!rank) {
+            ausentes.push(`${jogador} não aparece em ${categoria.label}.`);
+          }
+        }
+      }
+
+      if (ausentes.length > 0) {
+        avisos.push(...ausentes.slice(0, 12));
+
+        if (ausentes.length > 12) {
+          avisos.push(`Mais ${ausentes.length - 12} ausência(s) não exibida(s).`);
+        }
+      }
+
+      if (avisos.length > 0) {
+        el.warning.style.display = "block";
+        el.warning.innerHTML = `<strong>Aviso sobre os dados:</strong><br>${avisos.join("<br>")}`;
+      } else {
+        el.warning.style.display = "none";
+        el.warning.textContent = "";
+      }
+    }
+
+    function renderTable() {
+      el.guessTable.innerHTML = "";
+
+      for (const categoria of CATEGORIAS) {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td class="stat-name">${categoria.label}</td>
+          <td>
+            <input
+              type="number"
+              min="1"
+              max="${RANK_MAX}"
+              step="1"
+              id="guess-${categoria.key}"
+              aria-label="Palpite para ${categoria.label}"
+              disabled
+            />
+          </td>
+          <td id="feedback-${categoria.key}" class="feedback">—</td>
+          <td id="truth-${categoria.key}" class="hidden">Oculto</td>
+        `;
+
+        el.guessTable.appendChild(tr);
+      }
+    }
+
+    function setInputsEnabled(enabled) {
+      for (const categoria of CATEGORIAS) {
+        document.getElementById(`guess-${categoria.key}`).disabled = !enabled;
+      }
+    }
+
+    function clearInputsAndFeedback() {
+      for (const categoria of CATEGORIAS) {
+        document.getElementById(`guess-${categoria.key}`).value = "";
+        document.getElementById(`feedback-${categoria.key}`).textContent = "—";
+        document.getElementById(`feedback-${categoria.key}`).className = "feedback";
+        document.getElementById(`truth-${categoria.key}`).textContent = "Oculto";
+        document.getElementById(`truth-${categoria.key}`).className = "hidden";
+      }
+    }
+
+    function getGuesses() {
+      const guesses = {};
+      const erros = [];
+
+      for (const categoria of CATEGORIAS) {
+        const input = document.getElementById(`guess-${categoria.key}`);
+        const valor = Number(input.value);
+
+        if (!Number.isInteger(valor) || valor < 1 || valor > RANK_MAX) {
+          erros.push(categoria.label);
+        } else {
+          guesses[categoria.key] = valor;
+        }
+      }
+
+      return { guesses, erros };
+    }
+
+    function getRankReal(categoriaKey) {
+      return state.rankingsPorJogador[state.player]?.[categoriaKey] ?? null;
+    }
+
+    function sortearJogador() {
+      resetarEstadoVisual({ manterJogador: false });
+
+      if (JOGADORES_SORTEIO.length === 0) {
+        el.status.textContent = "Não há jogadores em sorteio.csv.";
+        return;
+      }
+
+      let ticks = 0;
+      const totalTicks = 22;
+
+      el.spinBtn.disabled = true;
+      el.validateBtn.disabled = true;
+      el.nextBtn.disabled = true;
+      setInputsEnabled(false);
+      el.status.textContent = "Sorteando...";
+
+      const intervalId = setInterval(() => {
+        const nome = JOGADORES_SORTEIO[Math.floor(Math.random() * JOGADORES_SORTEIO.length)];
+        el.playerDisplay.textContent = nome;
+        ticks += 1;
+
+        if (ticks >= totalTicks) {
+          clearInterval(intervalId);
+
+          state.player = JOGADORES_SORTEIO[Math.floor(Math.random() * JOGADORES_SORTEIO.length)];
+          el.playerDisplay.textContent = state.player;
+          el.status.textContent = "Rodada 1: digite seus palpites e valide.";
+
+          el.spinBtn.disabled = false;
+          el.validateBtn.disabled = false;
+          el.resetBtn.disabled = false;
+          setInputsEnabled(true);
+        }
+      }, 70);
+    }
+
+    function validarRodada() {
+      if (!state.player) {
+        el.status.textContent = "Sorteie um jogador antes de validar.";
+        return;
+      }
+
+      const { guesses, erros } = getGuesses();
+
+      if (erros.length > 0) {
+        el.status.textContent = `Preencha todos os palpites com números de 1 a ${RANK_MAX}. Pendentes: ${erros.join(", ")}.`;
+        return;
+      }
+
+      if (state.round === 1) {
+        validarRodada1(guesses);
+      } else {
+        validarRodada2(guesses);
+      }
+    }
+
+    function validarRodada1(guesses) {
+      for (const categoria of CATEGORIAS) {
+        const palpite = guesses[categoria.key];
+        const real = getRankReal(categoria.key);
+        const feedbackCell = document.getElementById(`feedback-${categoria.key}`);
+
+        if (!real) {
+          feedbackCell.textContent = "?";
+          feedbackCell.className = "feedback";
+          continue;
+        }
+
+        if (palpite === real) {
+          feedbackCell.textContent = "=";
+          feedbackCell.className = "feedback equal";
+        } else if (palpite > real) {
+          // Exemplo: palpite #80, real #20. O jogador está mais alto no ranking.
+          feedbackCell.textContent = "↑";
+          feedbackCell.className = "feedback up";
+        } else {
+          // Exemplo: palpite #20, real #80. O jogador está mais baixo no ranking.
+          feedbackCell.textContent = "↓";
+          feedbackCell.className = "feedback down";
+        }
+      }
+
+      state.validatedRound1 = true;
+      el.status.textContent = "Pistas dadas. Avance para a rodada 2 e faça os palpites finais.";
+      el.validateBtn.disabled = true;
+      el.nextBtn.disabled = false;
+      setInputsEnabled(false);
+    }
+
+    function irParaRodada2() {
+      if (!state.validatedRound1) {
+        return;
+      }
+
+      state.round = 2;
+      state.validatedRound2 = false;
+
+      el.roundPill.textContent = "Rodada 2 de 2";
+      el.status.textContent = "Rodada 2: digite seus palpites finais.";
+      el.validateBtn.disabled = false;
+      el.nextBtn.disabled = true;
+
+      setInputsEnabled(true);
+
+      for (const categoria of CATEGORIAS) {
+        document.getElementById(`guess-${categoria.key}`).value = "";
+        document.getElementById(`feedback-${categoria.key}`).textContent = "—";
+        document.getElementById(`feedback-${categoria.key}`).className = "feedback";
+      }
+    }
+
+    function validarRodada2(guesses) {
+      let somaDeltas = 0;
+
+      for (const categoria of CATEGORIAS) {
+        const palpite = guesses[categoria.key];
+        const real = getRankReal(categoria.key);
+        const feedbackCell = document.getElementById(`feedback-${categoria.key}`);
+        const truthCell = document.getElementById(`truth-${categoria.key}`);
+
+        if (!real) {
+          feedbackCell.textContent = "?";
+          feedbackCell.className = "feedback";
+          truthCell.textContent = "Fora da base";
+          truthCell.className = "truth";
+          continue;
+        }
+
+        const delta = Math.abs(palpite - real);
+        somaDeltas += delta;
+
+        feedbackCell.textContent = `Δ ${delta}`;
+        feedbackCell.className = "feedback";
+        truthCell.textContent = `#${real}`;
+        truthCell.className = "truth";
+      }
+
+      const pontuacao = 1 - (somaDeltas / MAX_DELTA);
+      const pontuacaoLimitada = Math.max(0, Math.min(1, pontuacao));
+
+      el.scoreBox.style.display = "block";
+      el.scoreMain.textContent = pontuacaoLimitada.toFixed(3).replace(".", ",");
+      el.scoreDetails.textContent =
+        `Soma dos deltas: ${somaDeltas}. Fórmula: 1 - (${somaDeltas} / ${MAX_DELTA}). ` +
+        `Equivalente a ${(pontuacaoLimitada * 100).toFixed(1).replace(".", ",")}% de precisão.`;
+
+      state.validatedRound2 = true;
+      el.status.textContent = "Jogo encerrado. As posições reais foram reveladas.";
+      el.validateBtn.disabled = true;
+      el.nextBtn.disabled = true;
+      setInputsEnabled(false);
+    }
+
+    function resetarEstadoVisual({ manterJogador }) {
+      state.round = 1;
+      state.validatedRound1 = false;
+      state.validatedRound2 = false;
+
+      if (!manterJogador) {
+        state.player = null;
+      }
+
+      el.roundPill.textContent = "Rodada 1 de 2";
+      el.status.textContent = manterJogador && state.player
+        ? "Rodada 1: digite seus palpites e valide."
+        : "Sorteie um jogador para começar.";
+
+      el.validateBtn.disabled = !state.player;
+      el.nextBtn.disabled = true;
+      el.scoreBox.style.display = "none";
+
+      clearInputsAndFeedback();
+      setInputsEnabled(Boolean(state.player));
+
+      if (!manterJogador) {
+        el.playerDisplay.textContent = "Clique em sortear";
+      }
+    }
+
+    function novoJogo() {
+      resetarEstadoVisual({ manterJogador: false });
+    }
+
+    function mostrarErroDeCarregamento(error) {
+      el.playerDisplay.textContent = "Erro nos dados";
+      el.status.textContent = "Falha ao carregar os arquivos CSV.";
+      el.warning.style.display = "block";
+      el.warning.innerHTML =
+        `<strong>Erro:</strong><br>${error.message}<br><br>` +
+        `Se você abriu o index.html com duplo clique, o navegador pode bloquear a leitura dos CSVs. ` +
+        `Teste com Live Server no VS Code ou publique no GitHub Pages.`;
+    }
+
+    async function iniciar() {
+      renderTable();
+
+      try {
+        await carregarDados();
+
+        state.rankingsPorJogador = buildRankingMap();
+
+        validarBaseDeDados();
+        resetarEstadoVisual({ manterJogador: false });
+
+        el.spinBtn.disabled = false;
+        el.resetBtn.disabled = false;
+
+        el.spinBtn.addEventListener("click", sortearJogador);
+        el.validateBtn.addEventListener("click", validarRodada);
+        el.nextBtn.addEventListener("click", irParaRodada2);
+        el.resetBtn.addEventListener("click", novoJogo);
+      } catch (error) {
+        mostrarErroDeCarregamento(error);
+      }
+    }
+
+    iniciar();
+  </script>
+</body>
+</html>
