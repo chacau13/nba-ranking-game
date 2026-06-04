@@ -18,9 +18,6 @@
       --red: #ef4444;
       --button: #2563eb;
       --button-hover: #1d4ed8;
-      --warning-border: #92400e;
-      --warning-bg: rgba(146, 64, 14, 0.16);
-      --warning-text: #fde68a;
     }
 
     * {
@@ -170,7 +167,7 @@
       border-collapse: collapse;
       overflow: hidden;
       border-radius: 14px;
-      min-width: 900px;
+      min-width: 930px;
     }
 
     thead th {
@@ -220,7 +217,7 @@
     }
 
     .feedback-text {
-      min-width: 130px;
+      min-width: 170px;
       font-size: 14px;
       font-weight: 800;
       white-space: nowrap;
@@ -264,27 +261,30 @@
       padding: 16px;
     }
 
+    .score-row {
+      display: grid;
+      gap: 4px;
+      padding: 0 0 14px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .score-row:last-child {
+      border-bottom: 0;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
     .score-main {
-      font-size: 42px;
+      font-size: 36px;
       font-weight: 900;
       letter-spacing: -0.04em;
-      margin-bottom: 8px;
     }
 
-    .warning {
-      display: none;
-      margin-top: 12px;
-      border: 1px solid var(--warning-border);
-      background: var(--warning-bg);
-      color: var(--warning-text);
-      border-radius: 14px;
-      padding: 12px;
-      line-height: 1.45;
+    .score-details {
+      color: var(--muted);
       font-size: 14px;
-    }
-
-    .warning strong {
-      color: #fff7ed;
+      line-height: 1.45;
     }
 
     .file-note {
@@ -322,12 +322,18 @@
         </div>
 
         <div id="scoreBox" class="score-box">
-          <div class="label">Pontuação final</div>
-          <div id="scoreMain" class="score-main">0,00%</div>
-          <p id="scoreDetails"></p>
-        </div>
+          <div id="scoreRound1" class="score-row">
+            <div class="label">Pontuação parcial — rodada 1</div>
+            <div id="scoreRound1Main" class="score-main">—</div>
+            <div id="scoreRound1Details" class="score-details">Aparece após validar a primeira rodada.</div>
+          </div>
 
-        <div id="warning" class="warning"></div>
+          <div id="scoreRound2" class="score-row">
+            <div class="label">Pontuação final — rodada 2</div>
+            <div id="scoreRound2Main" class="score-main">—</div>
+            <div id="scoreRound2Details" class="score-details">Aparece após validar a segunda rodada.</div>
+          </div>
+        </div>
 
         <p class="file-note">
           Os rankings são lidos da pasta dados/. O arquivo sorteio.csv define quais jogadores podem ser sorteados.
@@ -374,19 +380,11 @@
 
       O ranking real é calculado pela ordem das linhas válidas do CSV,
       não pelo número da coluna Rk.
-
-      Exemplo:
-      Rk,Player,G
-      1.,LeBron James,1622
-      2.,Kareem Abdul-Jabbar,1560
-      ,Patty Mills,921
-
-      Se Patty Mills for a 250ª linha válida, ele será tratado como #250.
     */
 
     const RANK_MAX = 250;
 
-    // Ajuste estes limites para calibrar as cores.
+    // Ajuste estes limites para calibrar cores e intensidade do texto.
     const ERRO_PEQUENO_MAX = 20;
     const ERRO_MEDIO_MAX = 75;
 
@@ -438,9 +436,10 @@
       validateBtn: document.getElementById("validateBtn"),
       resetBtn: document.getElementById("resetBtn"),
       scoreBox: document.getElementById("scoreBox"),
-      scoreMain: document.getElementById("scoreMain"),
-      scoreDetails: document.getElementById("scoreDetails"),
-      warning: document.getElementById("warning")
+      scoreRound1Main: document.getElementById("scoreRound1Main"),
+      scoreRound1Details: document.getElementById("scoreRound1Details"),
+      scoreRound2Main: document.getElementById("scoreRound2Main"),
+      scoreRound2Details: document.getElementById("scoreRound2Details")
     };
 
     function parseCSVLine(line) {
@@ -615,37 +614,6 @@
       return map;
     }
 
-    function validarBaseDeDados() {
-      const avisos = [];
-
-      for (const categoria of CATEGORIAS) {
-        const lista = LISTAS_RANKINGS[categoria.key] || [];
-        const jogadores = lista.map(item => item.jogador);
-
-        if (lista.length !== RANK_MAX) {
-          avisos.push(`${categoria.label}: há ${lista.length} jogadores, não ${RANK_MAX}.`);
-        }
-
-        const jogadoresDuplicados = jogadores.filter((nome, index) => jogadores.indexOf(nome) !== index);
-
-        if (jogadoresDuplicados.length > 0) {
-          avisos.push(`${categoria.label}: há nomes duplicados.`);
-        }
-      }
-
-      if (JOGADORES_SORTEIO.length === 0) {
-        avisos.push("sorteio.csv não tem jogadores disponíveis.");
-      }
-
-      if (avisos.length > 0) {
-        el.warning.style.display = "block";
-        el.warning.innerHTML = `<strong>Avisos sobre os dados:</strong><br>${avisos.join("<br>")}`;
-      } else {
-        el.warning.style.display = "none";
-        el.warning.textContent = "";
-      }
-    }
-
     function renderTable() {
       el.guessTable.innerHTML = "";
 
@@ -710,11 +678,47 @@
       return "large-error";
     }
 
+    function intensidadeErro(delta) {
+      if (delta <= ERRO_PEQUENO_MAX) {
+        return "Um pouco ";
+      }
+
+      if (delta <= ERRO_MEDIO_MAX) {
+        return "";
+      }
+
+      return "Muito ";
+    }
+
     function formatarPercentual(valor) {
       return valor.toLocaleString("pt-BR", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
       }) + "%";
+    }
+
+    function calcularPontuacao(guesses) {
+      let somaDeltas = 0;
+      const categoriasAplicaveis = getCategoriasAplicaveis();
+      const totalAplicaveis = categoriasAplicaveis.length;
+      const maxDeltaAplicavel = totalAplicaveis * (RANK_MAX - 1);
+
+      for (const categoria of categoriasAplicaveis) {
+        const real = getRankReal(categoria.key);
+        const palpite = guesses[categoria.key];
+        somaDeltas += Math.abs(palpite - real);
+      }
+
+      const pontuacao = maxDeltaAplicavel > 0
+        ? 1 - (somaDeltas / maxDeltaAplicavel)
+        : 0;
+
+      return {
+        somaDeltas,
+        totalAplicaveis,
+        maxDeltaAplicavel,
+        percentual: Math.max(0, Math.min(1, pontuacao)) * 100
+      };
     }
 
     function setInputsEnabled() {
@@ -790,6 +794,14 @@
         margin.className = "result-value";
         row.classList.remove("inactive-row");
       }
+    }
+
+    function limparPontuacoes() {
+      el.scoreBox.style.display = "none";
+      el.scoreRound1Main.textContent = "—";
+      el.scoreRound1Details.textContent = "Aparece após validar a primeira rodada.";
+      el.scoreRound2Main.textContent = "—";
+      el.scoreRound2Details.textContent = "Aparece após validar a segunda rodada.";
     }
 
     function getGuesses(rodada) {
@@ -887,6 +899,7 @@
 
       if (state.round === 1) {
         validarRodada1(guesses);
+        mostrarPontuacaoRodada1(guesses);
         ativarRodada2();
       } else {
         validarRodada2(guesses);
@@ -911,15 +924,25 @@
           feedbackCell.textContent = "Acertou!";
           feedbackCell.className = "feedback-text equal";
         } else if (palpite > real) {
-          feedbackCell.textContent = "Acima no ranking";
+          feedbackCell.textContent = `↑ ${intensidadeErro(delta)}acima no ranking`;
           feedbackCell.className = `feedback-text ${classeErro(delta)}`;
         } else {
-          feedbackCell.textContent = "Abaixo no ranking";
+          feedbackCell.textContent = `↓ ${intensidadeErro(delta)}abaixo no ranking`;
           feedbackCell.className = `feedback-text ${classeErro(delta)}`;
         }
       }
 
       state.validatedRound1 = true;
+    }
+
+    function mostrarPontuacaoRodada1(guesses) {
+      const score = calcularPontuacao(guesses);
+
+      el.scoreBox.style.display = "block";
+      el.scoreRound1Main.textContent = formatarPercentual(score.percentual);
+      el.scoreRound1Details.textContent =
+        `Soma das margens de erro: ${score.somaDeltas}. Stats aplicáveis: ${score.totalAplicaveis}/${CATEGORIAS.length}. ` +
+        `Fórmula: 1 - (${score.somaDeltas} / ${score.maxDeltaAplicavel}).`;
     }
 
     function ativarRodada2() {
@@ -941,10 +964,7 @@
     }
 
     function validarRodada2(guesses) {
-      let somaDeltas = 0;
-      const categoriasAplicaveis = getCategoriasAplicaveis();
-      const totalAplicaveis = categoriasAplicaveis.length;
-      const maxDeltaAplicavel = totalAplicaveis * (RANK_MAX - 1);
+      const score = calcularPontuacao(guesses);
 
       for (const categoria of CATEGORIAS) {
         const real = getRankReal(categoria.key);
@@ -961,7 +981,6 @@
 
         const palpite = guesses[categoria.key];
         const delta = Math.abs(palpite - real);
-        somaDeltas += delta;
 
         truthCell.textContent = `#${real}`;
         truthCell.className = "result-value";
@@ -969,15 +988,11 @@
         marginCell.className = `result-value ${classeErro(delta)}`;
       }
 
-      const pontuacao = 1 - (somaDeltas / maxDeltaAplicavel);
-      const pontuacaoLimitada = Math.max(0, Math.min(1, pontuacao));
-      const percentual = pontuacaoLimitada * 100;
-
       el.scoreBox.style.display = "block";
-      el.scoreMain.textContent = formatarPercentual(percentual);
-      el.scoreDetails.textContent =
-        `Soma das margens de erro: ${somaDeltas}. Stats aplicáveis: ${totalAplicaveis}/${CATEGORIAS.length}. ` +
-        `Fórmula: 1 - (${somaDeltas} / ${maxDeltaAplicavel}).`;
+      el.scoreRound2Main.textContent = formatarPercentual(score.percentual);
+      el.scoreRound2Details.textContent =
+        `Soma das margens de erro: ${score.somaDeltas}. Stats aplicáveis: ${score.totalAplicaveis}/${CATEGORIAS.length}. ` +
+        `Fórmula: 1 - (${score.somaDeltas} / ${score.maxDeltaAplicavel}).`;
 
       state.validatedRound2 = true;
       el.status.textContent = "Jogo encerrado. As posições reais foram reveladas.";
@@ -1002,8 +1017,8 @@
 
       el.validateBtn.disabled = !state.player;
       el.validateBtn.textContent = "Validar rodada";
-      el.scoreBox.style.display = "none";
 
+      limparPontuacoes();
       clearInputsAndFeedback();
 
       if (state.player) {
@@ -1021,12 +1036,7 @@
 
     function mostrarErroDeCarregamento(error) {
       el.playerDisplay.textContent = "Erro nos dados";
-      el.status.textContent = "Falha ao carregar os arquivos CSV.";
-      el.warning.style.display = "block";
-      el.warning.innerHTML =
-        `<strong>Erro:</strong><br>${error.message}<br><br>` +
-        `Se você abriu o index.html com duplo clique, o navegador pode bloquear a leitura dos CSVs. ` +
-        `Teste com Live Server no VS Code ou publique no GitHub Pages.`;
+      el.status.textContent = `Falha ao carregar os arquivos CSV: ${error.message}`;
     }
 
     async function iniciar() {
@@ -1037,7 +1047,6 @@
 
         state.rankingsPorJogador = buildRankingMap();
 
-        validarBaseDeDados();
         resetarEstadoVisual({ manterJogador: false });
 
         el.spinBtn.disabled = false;
